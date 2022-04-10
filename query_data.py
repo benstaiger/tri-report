@@ -14,8 +14,7 @@ def get_runsignup_data(race_id, event_id):
         "results_per_page": "2500",
     }
     response = requests.get(
-        f"https://runsignup.com/Rest/race/{race_id}/results/get-results",
-        params=params,
+        f"https://runsignup.com/Rest/race/{race_id}/results/get-results", params=params,
     )
     return response.json()
 
@@ -29,9 +28,7 @@ def get_tri_data():
     results = pd.DataFrame(data["individual_results_sets"][0]["results"])
     results = results[~results.place.isna()]
     results.rename(
-        data["individual_results_sets"][0]["results_headers"],
-        axis=1,
-        inplace=True,
+        data["individual_results_sets"][0]["results_headers"], axis=1, inplace=True,
     )
     return results
 
@@ -69,7 +66,7 @@ def compare_result(results):
     print(my_results)
     print(top)
     distances = {
-        "SWIM": .4,
+        "SWIM": 0.4,
         "T1": 0,
         "BIKE": 25,
         "T2": 0,
@@ -104,8 +101,7 @@ def plot_results(results):
         sorted_values = sorted(data)
         ranked = bin_search(sorted_values, line) + 1
         axis.set_title(
-            f"{prefix} Ranked {ranked}/{len(data)} "
-            f"({ranked/len(data)*100:.2f}%)"
+            f"{prefix} Ranked {ranked}/{len(data)} " f"({ranked/len(data)*100:.2f}%)"
         )
         axis.set_xlabel("Time (seconds)")
         axis.set_ylabel("# of Competitors")
@@ -132,10 +128,7 @@ def plot_results(results):
         for g in graphs:
             data = results[g][f].values
             plot_time_hist(
-                data,
-                my_results[g].values[0],
-                ax[ax_row][ax_col],
-                f"{g} {f_name}",
+                data, my_results[g].values[0], ax[ax_row][ax_col], f"{g} {f_name}",
             )
             print(f"Fastest {f_name} {g} {data[data == min(data)]}.")
             ax_col += 1
