@@ -1,3 +1,4 @@
+import itertools
 import requests
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -19,23 +20,23 @@ def get_runsignup_data(race_id, event_id):
     return response.json()
 
 
-if __name__ == "__main__":
-    data = get_runsignup_data(99534, 434161)
+def get_tri_data():
+    """
+    Return data from 2021 Tri-ing for Children's Sprint Triathlon
+    """
+    data = get_runsignup_data(99534, 434161)  # TODO: cache data
     print(len(data["individual_results_sets"][0]["results"]))
     results = pd.DataFrame(data["individual_results_sets"][0]["results"])
-    print(results.head(10))
     results = results[~results.place.isna()]
     results.rename(
         data["individual_results_sets"][0]["results_headers"],
         axis=1,
         inplace=True,
     )
-    results["SWIM"].hist()
-    results["BIKE"].hist()
-    # results["RUN"].hist()
-    print(results[results["Last Name"] == "Staiger"])
-    print(results.columns)
+    return results
 
+
+def clean_results(results):
     def convert_to_sec(str_time):
         comps = [float(v) for v in str_time.split(":")]
         if len(comps) == 2:
@@ -53,6 +54,37 @@ if __name__ == "__main__":
     results["Chip Time"] = results["Chip Time"].map(convert_to_sec)
     results["Clock Time"] = results["Clock Time"].map(convert_to_sec)
 
+
+def create_timeseries(result, distances):
+    order = ["SWIM", "T1", "BIKE", "T2", "Run"]
+    distance_covered = itertools.accumulate([distances[d] for d in order])
+    time_taken = itertools.accumulate([result[d] for d in order])
+    return list(time_taken), list(distance_covered)
+
+
+def compare_result(results):
+    my_results = results[results["Last Name"] == "Staiger"].iloc[0]
+    top = results[results["Place"] == 1].iloc[0]
+    my_results = results[results["Place"] == 2].iloc[0]
+    print(my_results)
+    print(top)
+    distances = {
+        "SWIM": .4,
+        "T1": 0,
+        "BIKE": 25,
+        "T2": 0,
+        "Run": 5,
+    }
+    my_result = create_timeseries(my_results, distances)
+    top_result = create_timeseries(top, distances)
+    # Maybe a relative ranking over time / section would be more easily read?
+    print(my_result)
+    plt.plot(my_result[0], my_result[1])
+    plt.plot(top_result[0], top_result[1])
+    plt.show()
+
+
+def plot_results(results):
     def plot_time_hist(data, line, axis, prefix):
         n, bins, patches = axis.hist(data, 50)
 
@@ -91,7 +123,7 @@ if __name__ == "__main__":
         "Age Group": ~results["M2529"].isna(),
     }
     fig, ax = plt.subplots(
-        len(filters), len(graphs), figsize=(5 * len(graphs), 5 * len(filters))
+        len(filters), len(graphs), figsize=(3 * len(graphs), 3 * len(filters))
     )
 
     ax_row = 0
@@ -111,7 +143,9 @@ if __name__ == "__main__":
 
     fig.tight_layout()
     plt.show()
-    plt.savefig("swim.jpg")
 
 
-    print("something")
+if __name__ == "__main__":
+    results = get_tri_data()
+    clean_results(results)
+    compare_result(results)
