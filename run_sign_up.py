@@ -15,7 +15,8 @@ def get_runsignup_data(race_id, event_id):
         "results_per_page": "2500",
     }
     response = requests.get(
-        f"https://runsignup.com/Rest/race/{race_id}/results/get-results", params=params,
+        f"https://runsignup.com/Rest/race/{race_id}/results/get-results",
+        params=params,
     )
     return response.json()
 
@@ -29,7 +30,9 @@ def get_tri_data():
     results = pd.DataFrame(data["individual_results_sets"][0]["results"])
     results = results[~results.place.isna()]
     results.rename(
-        data["individual_results_sets"][0]["results_headers"], axis=1, inplace=True,
+        data["individual_results_sets"][0]["results_headers"],
+        axis=1,
+        inplace=True,
     )
     clean_runsignup_results(results)
     return results
