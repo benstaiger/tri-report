@@ -1,11 +1,10 @@
-import bisect
-import itertools
 import requests
-import numpy as np
+
+import matplotlib.pyplot as plt
 import pandas as pd
-from matplotlib import pyplot as plt
 
 from clean_data import convert_to_sec
+from plot_tools import plot_time_hist, plot_ranked_participants
 
 
 def get_runsignup_data(race_id, event_id):
@@ -45,64 +44,6 @@ def clean_results(results):
     results["Run"] = results["Run"].map(convert_to_sec)
     results["Chip Time"] = results["Chip Time"].map(convert_to_sec)
     results["Clock Time"] = results["Clock Time"].map(convert_to_sec)
-
-
-def create_timeseries(result, distances):
-    order = ["SWIM", "T1", "BIKE", "T2", "Run"]
-    distance_covered = itertools.accumulate([distances[d] for d in order])
-    time_taken = itertools.accumulate([result[d] for d in order])
-    return list(time_taken), list(distance_covered)
-
-
-def compare_result(results):
-    my_results = results[results["Last Name"] == "Staiger"].iloc[0]
-    top = results[results["Place"] == 1].iloc[0]
-    print(my_results)
-    print(top)
-    distances = {
-        "SWIM": 0.4,
-        "T1": 0,
-        "BIKE": 25,
-        "T2": 0,
-        "Run": 5,
-    }
-    my_result = create_timeseries(my_results, distances)
-    top_result = create_timeseries(top, distances)
-    # Maybe a relative ranking over time / section would be more easily read?
-    print(my_result)
-    plt.plot(my_result[0], my_result[1], drawstyle="steps-post")
-    plt.plot(top_result[0], top_result[1], drawstyle="steps-post")
-    plt.show()
-
-
-def plot_time_hist(data, line, axis, prefix):
-    axis.hist(data, 50)  # should I really specify the bins?
-    sorted_values = sorted(data)
-    ranked = bisect.bisect(sorted_values, line)
-    axis.set_title(
-        f"{prefix} Rank {ranked}/{len(data)} "
-        f"({np.round(100 - ranked/len(data)*100)}%-tile)"
-    )
-    axis.set_xlabel("Time (seconds)")
-    axis.set_ylabel("# of Competitors")
-    axis.axvline(
-        x=line, color="r", linestyle="dashed", linewidth=2,
-    )
-
-
-def plot_ranked_participants(data, line, axis, prefix):
-    sorted_values = sorted(data)
-    axis.plot(np.arange(len(sorted_values)), sorted_values, drawstyle="steps-post")
-    ranked = bisect.bisect(sorted_values, line)
-    axis.set_title(
-        f"{prefix} Rank {ranked}/{len(data)} "
-        f"({np.round(100 - ranked/len(data)*100):0.0f}%-tile)"
-    )
-    axis.set_xlabel("Rank")
-    axis.set_ylabel("Time Taken (seconds)")
-    axis.axvline(
-        x=ranked, color="r", linestyle="dashed", linewidth=2,
-    )
 
 
 def plot_results(results):
