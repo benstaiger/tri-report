@@ -1,10 +1,10 @@
 {
     "python.linting.pylintEnabled": false,
-    "python.linting.pycodestylePath": "/home/bstaiger/anaconda3/bin/pycodestyle",
+    "python.linting.pycodestylePath": "/Users/bstaiger/miniconda3/bin/pycodestyle",
     "python.linting.pycodestyleEnabled": true,
     "python.linting.enabled": true,
     "python.testing.pytestEnabled": true,
-    "python.formatting.blackPath": "/home/bstaiger/anaconda3/bin/black",
+    "python.formatting.blackPath": "/Users/bstaiger/miniconda3/bin/black",
     "python.formatting.provider": "black",
     "python.formatting.blackArgs": [
         "--line-length",
