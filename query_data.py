@@ -1,7 +1,11 @@
+import bisect
 import itertools
 import requests
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+
+from clean_data import convert_to_sec
 
 
 def get_runsignup_data(race_id, event_id):
@@ -34,15 +38,6 @@ def get_tri_data():
 
 
 def clean_results(results):
-    def convert_to_sec(str_time):
-        comps = [float(v) for v in str_time.split(":")]
-        if len(comps) == 2:
-            return comps[0] * 60 + comps[1]
-        elif len(comps) == 3:
-            return comps[0] * 60 * 60 + comps[1] * 60 + comps[2]
-        else:
-            raise ValueError(f"Unrecognized time format {str_time}")
-
     results["SWIM"] = results["SWIM"].map(convert_to_sec)
     results["T1"] = results["T1"].map(convert_to_sec)
     results["BIKE"] = results["BIKE"].map(convert_to_sec)
@@ -62,7 +57,6 @@ def create_timeseries(result, distances):
 def compare_result(results):
     my_results = results[results["Last Name"] == "Staiger"].iloc[0]
     top = results[results["Place"] == 1].iloc[0]
-    my_results = results[results["Place"] == 2].iloc[0]
     print(my_results)
     print(top)
     distances = {
@@ -76,43 +70,40 @@ def compare_result(results):
     top_result = create_timeseries(top, distances)
     # Maybe a relative ranking over time / section would be more easily read?
     print(my_result)
-    plt.plot(my_result[0], my_result[1])
-    plt.plot(top_result[0], top_result[1])
+    plt.plot(my_result[0], my_result[1], drawstyle="steps-post")
+    plt.plot(top_result[0], top_result[1], drawstyle="steps-post")
     plt.show()
 
+def plot_time_hist(data, line, axis, prefix):
+    axis.hist(data, 50)  # should I really specify the bins?
+    sorted_values = sorted(data)
+    ranked = bisect.bisect(sorted_values, line)
+    axis.set_title(
+        f"{prefix} Rank {ranked}/{len(data)} " f"({np.round(100 - ranked/len(data)*100)}%-tile)"
+    )
+    axis.set_xlabel("Time (seconds)")
+    axis.set_ylabel("# of Competitors")
+    axis.axvline(
+        x=line, color="r", linestyle="dashed", linewidth=2,
+    )
+
+def plot_ranked_participants(data, line, axis, prefix):
+    sorted_values = sorted(data)
+    axis.plot(np.arange(len(sorted_values)), sorted_values, drawstyle="steps-post")
+    ranked = bisect.bisect(sorted_values, line)
+    axis.set_title(
+        f"{prefix} Rank {ranked}/{len(data)} " f"({np.round(100 - ranked/len(data)*100):0.0f}%-tile)"
+    )
+    axis.set_xlabel("Rank")
+    axis.set_ylabel("Time Taken (seconds)")
+    axis.axvline(
+        x=ranked, color="r", linestyle="dashed", linewidth=2,
+    )
 
 def plot_results(results):
-    def plot_time_hist(data, line, axis, prefix):
-        n, bins, patches = axis.hist(data, 50)
-
-        def bin_search(data, x):
-            lower = 0
-            upper = len(data) - 1
-            while lower < upper:
-                mid = (lower + upper) // 2
-                if data[mid] < x:
-                    lower = mid + 1
-                elif data[mid] > x:
-                    upper = mid - 1
-                else:
-                    return mid
-            return (lower + upper) // 2
-
-        sorted_values = sorted(data)
-        ranked = bin_search(sorted_values, line) + 1
-        axis.set_title(
-            f"{prefix} Ranked {ranked}/{len(data)} " f"({ranked/len(data)*100:.2f}%)"
-        )
-        axis.set_xlabel("Time (seconds)")
-        axis.set_ylabel("# of Competitors")
-        axis.axvline(
-            x=line, color="r", linestyle="dashed", linewidth=2,
-        )
-
     my_results = results[results["Last Name"] == "Staiger"]
-
-    # graphs = ["SWIM", "BIKE", "Run"]
-    graphs = ["SWIM", "T1", "BIKE", "T2", "Run", "Chip Time"]
+    # graphs = ["SWIM", "T1", "BIKE", "T2", "Run", "Chip Time"]
+    graphs = ["SWIM", "BIKE", "Run", "Chip Time"]
     filters = {
         "Overall": ~results["Place"].isna(),
         "Gender": results["Gender"] == "M",
@@ -121,13 +112,13 @@ def plot_results(results):
     fig, ax = plt.subplots(
         len(filters), len(graphs), figsize=(3 * len(graphs), 3 * len(filters))
     )
-
     ax_row = 0
     for f_name, f in filters.items():
         ax_col = 0
         for g in graphs:
             data = results[g][f].values
-            plot_time_hist(
+            plot_ranked_participants(
+            # plot_time_hist(
                 data, my_results[g].values[0], ax[ax_row][ax_col], f"{g} {f_name}",
             )
             print(f"Fastest {f_name} {g} {data[data == min(data)]}.")
@@ -141,4 +132,5 @@ def plot_results(results):
 if __name__ == "__main__":
     results = get_tri_data()
     clean_results(results)
-    compare_result(results)
+    # compare_result(results)
+    plot_results(results)
