@@ -74,12 +74,14 @@ def compare_result(results):
     plt.plot(top_result[0], top_result[1], drawstyle="steps-post")
     plt.show()
 
+
 def plot_time_hist(data, line, axis, prefix):
     axis.hist(data, 50)  # should I really specify the bins?
     sorted_values = sorted(data)
     ranked = bisect.bisect(sorted_values, line)
     axis.set_title(
-        f"{prefix} Rank {ranked}/{len(data)} " f"({np.round(100 - ranked/len(data)*100)}%-tile)"
+        f"{prefix} Rank {ranked}/{len(data)} "
+        f"({np.round(100 - ranked/len(data)*100)}%-tile)"
     )
     axis.set_xlabel("Time (seconds)")
     axis.set_ylabel("# of Competitors")
@@ -87,18 +89,21 @@ def plot_time_hist(data, line, axis, prefix):
         x=line, color="r", linestyle="dashed", linewidth=2,
     )
 
+
 def plot_ranked_participants(data, line, axis, prefix):
     sorted_values = sorted(data)
     axis.plot(np.arange(len(sorted_values)), sorted_values, drawstyle="steps-post")
     ranked = bisect.bisect(sorted_values, line)
     axis.set_title(
-        f"{prefix} Rank {ranked}/{len(data)} " f"({np.round(100 - ranked/len(data)*100):0.0f}%-tile)"
+        f"{prefix} Rank {ranked}/{len(data)} "
+        f"({np.round(100 - ranked/len(data)*100):0.0f}%-tile)"
     )
     axis.set_xlabel("Rank")
     axis.set_ylabel("Time Taken (seconds)")
     axis.axvline(
         x=ranked, color="r", linestyle="dashed", linewidth=2,
     )
+
 
 def plot_results(results):
     my_results = results[results["Last Name"] == "Staiger"]
@@ -118,8 +123,11 @@ def plot_results(results):
         for g in graphs:
             data = results[g][f].values
             plot_ranked_participants(
-            # plot_time_hist(
-                data, my_results[g].values[0], ax[ax_row][ax_col], f"{g} {f_name}",
+                # plot_time_hist(
+                data,
+                my_results[g].values[0],
+                ax[ax_row][ax_col],
+                f"{g} {f_name}",
             )
             print(f"Fastest {f_name} {g} {data[data == min(data)]}.")
             ax_col += 1
