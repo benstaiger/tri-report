@@ -26,7 +26,6 @@ def get_tri_data():
     Return data from 2021 Tri-ing for Children's Sprint Triathlon
     """
     data = get_runsignup_data(99534, 434161)  # TODO: cache data
-    print(len(data["individual_results_sets"][0]["results"]))
     results = pd.DataFrame(data["individual_results_sets"][0]["results"])
     results = results[~results.place.isna()]
     results.rename(
