@@ -50,6 +50,7 @@ def generate_brickyard_tri_2022():
     results["Age Group"] = results["Age Group"].map(
         lambda x: x.replace("-", "")
     )
+    results = results.fillna(0.0)
     print(results.head(6))
     plot_ranking_results(results, ["Swim Time", "Bike Time", "Run Time"])
 

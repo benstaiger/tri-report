@@ -1,19 +1,28 @@
+import datetime
 import bisect
 import itertools
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
 
+def time_ticks(x, _):
+    d = datetime.timedelta(seconds=x)
+    return str(d)
+
+
 def plot_time_hist(data, line, axis, prefix):
-    axis.hist(data, 50)
-    sorted_values = sorted(data)
-    ranked = bisect.bisect(sorted_values, line)
+    formatter = matplotlib.ticker.FuncFormatter(time_ticks)
+    axis.yaxis.set_major_formatter(formatter)
+    sorted_values = sorted([d for d in data if d != 0])
+    axis.hist(sorted_values, 50)
+    ranked = bisect.bisect_left(sorted_values, line) + 1  # 1-based index
     axis.set_title(
         f"{prefix} Rank {ranked}/{len(data)} "
         f"({np.round(100 - ranked/len(data)*100)}%-tile)"
     )
-    axis.set_xlabel("Time (seconds)")
+    axis.set_xlabel("Time")
     axis.set_ylabel("# of Competitors")
     axis.axvline(
         x=line, color="r", linestyle="dashed", linewidth=2,
@@ -21,17 +30,23 @@ def plot_time_hist(data, line, axis, prefix):
 
 
 def plot_ranked_participants(data, line, axis, prefix):
-    sorted_values = sorted(data)
-    axis.plot(np.arange(len(sorted_values)), sorted_values, drawstyle="steps-post")
-    ranked = bisect.bisect(sorted_values, line)
+    sorted_values = sorted([d for d in data if d != 0])
+    formatter = matplotlib.ticker.FuncFormatter(time_ticks)
+    axis.yaxis.set_major_formatter(formatter)
+    axis.plot(
+        np.arange(1, len(sorted_values) + 1),  # 1-based index
+        sorted_values,
+        # drawstyle="steps-post",
+    )
+    ranked = bisect.bisect_left(sorted_values, line) + 1
     axis.set_title(
         f"{prefix} Rank {ranked}/{len(data)} "
         f"({np.round(100 - ranked/len(data)*100):0.0f}%-tile)"
     )
     axis.set_xlabel("Rank")
-    axis.set_ylabel("Time Taken (seconds)")
-    axis.axvline(
-        x=ranked, color="r", linestyle="dashed", linewidth=2,
+    axis.set_ylabel("Time Taken")
+    axis.axhline(
+        y=line, color="r", linestyle="dashed", linewidth=1,
     )
 
 
